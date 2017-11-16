@@ -1,0 +1,19 @@
+{
+  "name": "docker_web_app",
+  "version": "0.0.1",
+  "description": "Express backend for multiple database connections",
+  "author": "Michal Repec <mikerepec@gmail.com>",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "express": "^4.13.3",
+    "mongoose": "^4.13.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.1"
+  }
+}
