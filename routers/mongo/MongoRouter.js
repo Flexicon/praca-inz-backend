@@ -9,7 +9,7 @@ router.use(bodyParser.urlencoded({extended: true}));
 router.get('/', (req, res) => {
     res.send({
         status: true,
-        version: '0.0.1',
+        version: '0.0.2',
         message: 'MongoDB API'
     });
 });

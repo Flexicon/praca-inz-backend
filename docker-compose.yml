@@ -4,6 +4,8 @@ services:
         image: mongo
     express:
         build: .
+        volumes:
+          - ./:/usr/src
         ports:
             - "8081:8080"
 

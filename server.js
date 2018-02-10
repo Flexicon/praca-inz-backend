@@ -9,7 +9,7 @@ const HOST = '0.0.0.0';
 
 // Routing
 app.get('/', (req, res) => {
-    res.send('Hello Docker!');
+    res.send('Docker Backend!');
 });
 
 const MongoRouter = require('./routers/mongo/MongoRouter');
