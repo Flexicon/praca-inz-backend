@@ -1,4 +1,4 @@
-FROM node:latest
+FROM node:alpine
 # use nodemon for development
 RUN npm install --global nodemon
 # use cached layer for node modules

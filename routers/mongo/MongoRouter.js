@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const NotesController = require('../../controllers/mongo/NotesController');
+const MoviesController = require('../../controllers/mongo/MoviesController');
 
 router.use(bodyParser.urlencoded({extended: true}));
 
@@ -20,5 +21,9 @@ router.route('/notes')
     .post(NotesController.note)
     .put(NotesController.add)
     .delete(NotesController.remove);
+
+router.route('/movies')
+    .get(MoviesController.all)
+    .post(MoviesController.movie);
 
 module.exports = router;
