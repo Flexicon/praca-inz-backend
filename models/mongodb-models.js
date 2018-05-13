@@ -1,28 +1,30 @@
 const mongoose = require('../dbs/mongo');
 
 // Mongoose schemas and models
-const noteSchema = mongoose.Schema({
-    title: String,
-    content: String
-});
-const Note = mongoose.model('Note', noteSchema);
-
 const movieSchema = mongoose.Schema({
-    movieId: Number,
+    _id: Number,
     title: String,
-    genres: String
+    genres: String,
 });
-const Movie = mongoose.model('Movie', movieSchema);
+const Movie = mongoose.model('movie', movieSchema);
 
 const ratingSchema = mongoose.Schema({
-    movieId: Number,
+    movieId: { type: Number, ref: 'movie' },
     rating: Number,
     'timestamp': Number
 });
-const Rating = mongoose.model('Rating', ratingSchema);
+const Rating = mongoose.model('rating', ratingSchema);
+
+const tagSchema = mongoose.Schema({
+    movieId: { type: Number, ref: 'movie' },
+    tag: String,
+    'timestamp': Number
+});
+const Tag = mongoose.model('tag', tagSchema);
+
 
 module.exports = {
-    Note,
     Movie,
-    Rating
+    Rating,
+    Tag,
 };

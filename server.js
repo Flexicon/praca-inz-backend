@@ -15,6 +15,12 @@ app.get('/', (req, res) => {
 const MongoRouter = require('./routers/mongo/MongoRouter');
 app.use('/mongo', MongoRouter);
 
+// Error handler
+app.use(function (err, req, res, next) {
+    console.error(err);
+    res.status(500).send({ message: 'An unexpected error has occurred' });
+});
+
 app.listen(PORT, HOST);
 console.log(`Running on http://${HOST}:${PORT}`);
 

@@ -1,29 +1,30 @@
+
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const NotesController = require('../../controllers/mongo/NotesController');
 const MoviesController = require('../../controllers/mongo/MoviesController');
+const RatingsController = require('../../controllers/mongo/RatingsController');
 
 router.use(bodyParser.urlencoded({extended: true}));
 
 
 router.get('/', (req, res) => {
     res.send({
-        status: true,
-        version: '0.0.2',
+        version: '0.0.3',
         message: 'MongoDB API'
     });
 });
 
-// Notes routes
-router.route('/notes')
-    .get(NotesController.all)
-    .post(NotesController.note)
-    .put(NotesController.add)
-    .delete(NotesController.remove);
-
+// Movies routes
 router.route('/movies')
-    .get(MoviesController.all)
-    .post(MoviesController.movie);
+    .get(MoviesController.list);
+router.route('/movies/:id')
+    .get(MoviesController.movie);
+
+// Ratings routes
+router.route('/ratings')
+    .get(RatingsController.list);
+router.route('/ratings/:id')
+    .get(RatingsController.rating);
 
 module.exports = router;

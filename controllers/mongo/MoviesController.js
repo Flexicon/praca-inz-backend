@@ -1,26 +1,49 @@
 const MongoModels = require('../../models/mongodb-models');
 
+function getSort(sort) {
+    switch (sort) {
+        case 'title':
+            return 'title';
+        case 'title_desc':
+            return '-title';
+        case 'id_desc':
+            return '-_id';
+        case 'id':
+        default:
+            return '_id';
+    }
+}
+
 const MoviesController = {
-    // Retrieve all Movie documents
-    all: function (req, res) {
-        MongoModels.Movie.find(function (err, movies) {
-            if (err) {
-                res.send({ status: false, message: 'An error has occurred while retrieving movies' });
-                console.error(err.message);
-                return;
-            }
-            res.send({ status: true, movies: movies });
-        });
+    // Retrieve a paginated list of Movie documents
+    list: function (req, res, next) {
+        MongoModels.Movie.count().then(count => {
+            const sort = req.query.sort || 'id';
+            const limit = Math.max(1, +req.query.limit || 100);
+            const totalPages = Math.ceil(count / limit);
+            let page = Math.max(1, +req.query.page || 1);
+            page = Math.min(page, totalPages);
+
+            MongoModels.Movie
+                .find()
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .sort(getSort(sort))
+                .exec()
+                .then(movies => res.send({ total: count, limit, page, totalPages, movies }))
+                .catch(err => next(err));
+        }).catch(err => next(err));
     },
     // Retrieve a single Movie document
-    movie: function (req, res) {
-        MongoModels.Movie.find(req.body.id, function (err, movie) {
-            if (err || !movie) {
-                res.send({ status: false, message: 'No movie found by given id' });
-                return;
-            }
-            res.send({ status: true, movie: movie });
-        });
+    movie: function (req, res, next) {
+        MongoModels.Movie.findById(+req.params.id)
+            .then(movie => {
+                if (!movie) {
+                    res.status(404).send({ message: 'No movie found by given id' });
+                    return;
+                }
+                res.send(movie);
+            }).catch(err => next(err));
     }
 };
 
