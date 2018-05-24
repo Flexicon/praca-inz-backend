@@ -42,7 +42,20 @@ const MoviesController = {
                     res.status(404).send({ message: 'No movie found by given id' });
                     return;
                 }
-                res.send(movie);
+                const ratingsPromise = MongoModels.Rating
+                    .aggregate([
+                        { $match: { movieId: movie._id } },
+                        { $group: { _id: null, rating: { $avg: '$rating' }, count: { $sum: 1 } } }
+                    ]).exec();
+                const tagsPromise = MongoModels.Tag
+                    .find({ movieId: movie._id })
+                    .limit(100)
+                    .sort('-timestamp');
+
+                Promise.all([ratingsPromise, tagsPromise])
+                    .then(([rating, tags]) => res.send({ movie, rating, tags }))
+                    .catch(err => next(err));
+
             }).catch(err => next(err));
     }
 };

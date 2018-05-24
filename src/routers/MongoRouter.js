@@ -1,16 +1,15 @@
-
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const MoviesController = require('../../controllers/mongo/MoviesController');
-const RatingsController = require('../../controllers/mongo/RatingsController');
+const MoviesController = require('../controllers/mongo/MoviesController');
+const RatingsController = require('../controllers/mongo/RatingsController');
 
 router.use(bodyParser.urlencoded({extended: true}));
 
 
 router.get('/', (req, res) => {
     res.send({
-        version: '0.0.3',
+        version: '0.0.4',
         message: 'MongoDB API'
     });
 });

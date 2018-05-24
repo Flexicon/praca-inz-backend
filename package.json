@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "Express backend for multiple database connections",
   "author": "Michal Repec <mikerepec@gmail.com>",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node src/server.js"
   },
   "dependencies": {
     "body-parser": "^1.18.2",

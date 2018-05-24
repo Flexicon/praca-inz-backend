@@ -9,10 +9,13 @@ const HOST = '0.0.0.0';
 
 // Routing
 app.get('/', (req, res) => {
-    res.send('Docker Backend!');
+    res.send({
+        version: '0.0.1',
+        message: 'Praca inz backend'
+    });
 });
 
-const MongoRouter = require('./routers/mongo/MongoRouter');
+const MongoRouter = require('./routers/MongoRouter');
 app.use('/mongo', MongoRouter);
 
 // Error handler

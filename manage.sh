@@ -24,7 +24,7 @@ function start_containers(){
         docker-compose up -d
 
         CONTAINER_ID_EXPRESS=`docker-compose ps -q express`
-        docker exec -d $CONTAINER_ID_EXPRESS node
+        docker exec -d $CONTAINER_ID_EXPRESS npm start
     else
         ENVIRONMENT=$ENVIRONMENT_DEV
         echo -e "Starting the containers in the ${COLOR_GREEN}${ENVIRONMENT}${COLOR_NO_COLOR} environment."
@@ -53,14 +53,11 @@ elif [[ $1 == 'stop' ]]; then
 elif [[ $1 == 'chown' ]]; then
      update_permissions
 
-elif [[ $1 == 'initialize' ]]; then
+elif [[ $1 == 'init' ]]; then
     docker-compose build
     docker-compose create
 
     start_containers $2
-
-    CONTAINER_ID_EXPRESS=`docker-compose ps -q express`
-    CONTAINER_ID_MONGODB=`docker-compose ps -q mongodb`
 
     # seed the db
     ./manage.sh database seed-data
@@ -89,6 +86,6 @@ elif [[ $1 == 'database' && $2 == 'seed-data' ]]; then
     docker exec $CONTAINER_ID_MONGODB rm -rf /seeds
 
 else
-    echo "$0 start/stop/initialize/chown/database"
+    echo "$0 start/stop/init/chown/database"
 
 fi
