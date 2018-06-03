@@ -5,6 +5,7 @@ const movieSchema = mongoose.Schema({
     _id: Number,
     title: String,
     genres: String,
+    poster: String
 });
 const Movie = mongoose.model('movie', movieSchema);
 
