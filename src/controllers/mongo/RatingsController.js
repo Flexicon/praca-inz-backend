@@ -1,18 +1,37 @@
 const MongoModels = require('../../models/mongodb-models');
+const Utils = require('../../shared/util');
+
+function getSort(sort) {
+    switch (sort) {
+        case 'timestamp':
+            return 'timestamp';
+        case 'timestamp_desc':
+        default:
+            return '-timestamp';
+    }
+}
 
 const RatingsController = {
     // Retrieve a paginated list of Rating documents
     list: function (req, res, next) {
-        const limit = Math.max(1, +req.query.limit || 100);
+        MongoModels.Rating.count().then(count => {
+            const {
+                limit,
+                page,
+                totalPages,
+                sort
+            } = Utils.preparePaginationParams(req.query, count, 100, 'timestamp_desc');
 
-        MongoModels.Rating
-            .find()
-            .limit(limit)
-            .sort('-timestamp')
-            .populate('movieId')
-            .exec()
-            .then(ratings => res.send({ ratings }))
-            .catch(err => next(err));
+            MongoModels.Rating
+                .find()
+                .skip((page - 1) * limit)
+                .limit(limit)
+                .sort(getSort(sort))
+                .populate('movieId')
+                .exec()
+                .then(ratings => res.send({ total: count, limit, page, totalPages, sort, ratings }))
+                .catch(err => next(err));
+        }).catch(err => next(err));
     },
     // Retrieve a single Rating document
     rating: function (req, res, next) {

@@ -1,4 +1,5 @@
 const MongoModels = require('../../models/mongodb-models');
+const Utils = require('../../shared/util');
 
 function getSort(sort) {
     switch (sort) {
@@ -18,11 +19,7 @@ const MoviesController = {
     // Retrieve a paginated list of Movie documents
     list: function (req, res, next) {
         MongoModels.Movie.count().then(count => {
-            const sort = req.query.sort || 'id';
-            const limit = Math.max(1, +req.query.limit || 100);
-            const totalPages = Math.ceil(count / limit);
-            let page = Math.max(1, +req.query.page || 1);
-            page = Math.min(page, totalPages);
+            const { limit, page, totalPages, sort } = Utils.preparePaginationParams(req.query, count, 100);
 
             MongoModels.Movie
                 .find()
@@ -30,7 +27,7 @@ const MoviesController = {
                 .limit(limit)
                 .sort(getSort(sort))
                 .exec()
-                .then(movies => res.send({ total: count, limit, page, totalPages, movies }))
+                .then(movies => res.send({ total: count, limit, page, totalPages, sort, movies }))
                 .catch(err => next(err));
         }).catch(err => next(err));
     },

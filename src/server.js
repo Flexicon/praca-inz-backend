@@ -21,7 +21,7 @@ app.use('/mongo', MongoRouter);
 // Error handler
 app.use(function (err, req, res, next) {
     console.error(err);
-    res.status(500).send({ message: 'An unexpected error has occurred' });
+    res.status(500).send({ message: 'An unexpected error has occurred', err: err.message });
 });
 
 app.listen(PORT, HOST);
