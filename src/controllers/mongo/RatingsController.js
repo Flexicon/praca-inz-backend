@@ -29,7 +29,7 @@ const RatingsController = {
                 .sort(getSort(sort))
                 .populate('movieId')
                 .exec()
-                .then(ratings => res.send({ total: count, limit, page, totalPages, sort, ratings }))
+                .then(ratings => res.send({ total: count, limit, page, totalPages, sort, items: ratings }))
                 .catch(err => next(err));
         }).catch(err => next(err));
     },

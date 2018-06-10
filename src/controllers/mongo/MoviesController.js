@@ -27,7 +27,7 @@ const MoviesController = {
                 .limit(limit)
                 .sort(getSort(sort))
                 .exec()
-                .then(movies => res.send({ total: count, limit, page, totalPages, sort, movies }))
+                .then(movies => res.send({ total: count, limit, page, totalPages, sort, items: movies }))
                 .catch(err => next(err));
         }).catch(err => next(err));
     },
