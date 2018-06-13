@@ -58,13 +58,19 @@ elif [[ $1 == 'init' ]]; then
     docker-compose up -d
 
     # install dependencies
+    echo -e "${COLOR_YELLOW}Installing NPM dependencies${COLOR_NO_COLOR}"
     CONTAINER_ID_EXPRESS=`docker-compose ps -q express`
     docker exec -d $CONTAINER_ID_EXPRESS npm install
 
     start_containers $2
 
     # seed the db
+    echo -e "${COLOR_YELLOW}Seeding databases${COLOR_NO_COLOR}"
     ./manage.sh database seed-data
+
+    # fix file permissions
+    echo -e "${COLOR_YELLOW}Setting file permissions${COLOR_NO_COLOR}"
+    ./manage.sh chown
 
 elif [[ $1 == 'clean' ]]; then
     ./manage.sh stop
