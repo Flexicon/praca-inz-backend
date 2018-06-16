@@ -38,7 +38,7 @@ function start_containers(){
 }
 
 function update_permissions(){
-    docker-compose exec --privileged --user=root express chown -R www-data:www-data *
+    docker-compose exec --privileged --user=root express chown -R $UID:$GID *
     docker-compose exec --privileged --user=root express find . -type d -exec chmod 775 {} \;
     docker-compose exec --privileged --user=root express find . -type f -name \*.* -exec chmod 664 {} \;
     docker-compose exec --privileged --user=root express find . -type f -name \*.sh -exec chmod 775 {} \;
@@ -55,12 +55,22 @@ elif [[ $1 == 'chown' ]]; then
 
 elif [[ $1 == 'init' ]]; then
     docker-compose build
-    docker-compose create
+    docker-compose up -d
+
+    # install dependencies
+    echo -e "${COLOR_YELLOW}Installing NPM dependencies${COLOR_NO_COLOR}"
+    CONTAINER_ID_EXPRESS=`docker-compose ps -q express`
+    docker exec -d $CONTAINER_ID_EXPRESS npm install
 
     start_containers $2
 
     # seed the db
+    echo -e "${COLOR_YELLOW}Seeding databases${COLOR_NO_COLOR}"
     ./manage.sh database seed-data
+
+    # fix file permissions
+    echo -e "${COLOR_YELLOW}Setting file permissions${COLOR_NO_COLOR}"
+    ./manage.sh chown
 
 elif [[ $1 == 'clean' ]]; then
     ./manage.sh stop
