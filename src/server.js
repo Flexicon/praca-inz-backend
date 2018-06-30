@@ -15,8 +15,13 @@ app.get('/', (req, res) => {
     });
 });
 
+// Mongo routes
 const MongoRouter = require('./routers/MongoRouter');
 app.use('/mongo', MongoRouter);
+
+// Couch routes
+const CouchRouter = require('./routers/CouchRouter');
+app.use('/couch', CouchRouter);
 
 // Error handler
 app.use(function (err, req, res, next) {

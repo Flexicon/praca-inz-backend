@@ -1,0 +1,11 @@
+{
+  "views": {
+    "list_by_title": {
+      "map": "function(doc){ emit(doc.title, null); }"
+    },
+    "count_by_title": {
+      "map": "function(doc){ emit(doc.title, 1); }",
+      "reduce": "_count"
+    }
+  }
+}

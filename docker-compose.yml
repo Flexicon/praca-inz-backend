@@ -4,10 +4,15 @@ services:
     image: mongo
     volumes:
       - mongo_data:/data/db
+  couchdb:
+    image: couchdb
+    ports:
+      - "5984:5984"
   express:
     build: .
     depends_on:
       - mongodb
+      - couchdb
     volumes:
       - ./:/app
     ports:

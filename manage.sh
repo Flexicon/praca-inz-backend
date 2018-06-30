@@ -78,22 +78,40 @@ elif [[ $1 == 'clean' ]]; then
     docker volume rm backend_mongo_data
 
 elif [[ $1 == 'database' && $2 == 'seed-data' ]]; then
+    CONTAINER_ID_EXPRESS=`docker-compose ps -q express`
     CONTAINER_ID_MONGODB=`docker-compose ps -q mongodb`
+    CONTAINER_ID_COUCHDB=`docker-compose ps -q couchdb`
 
+    ## MongoDB
     # copy seed files to the container
+    echo -e "${COLOR_YELLOW}MongoDB${COLOR_NO_COLOR}"
     docker exec $CONTAINER_ID_MONGODB mkdir /seeds
     docker cp ./seeds/movies.csv $CONTAINER_ID_MONGODB:/seeds/
     docker cp ./seeds/ratings.csv $CONTAINER_ID_MONGODB:/seeds/
     docker cp ./seeds/tags.csv $CONTAINER_ID_MONGODB:/seeds/
     # load data into database
+    echo -e "${COLOR_YELLOW}Creating movies database for mongo...${COLOR_NO_COLOR}"
     docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/movies.csv
+    echo -e "${COLOR_YELLOW}Creating ratings database for mongo...${COLOR_NO_COLOR}"
     docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/ratings.csv
+    echo -e "${COLOR_YELLOW}Creating tags database for mongo...${COLOR_NO_COLOR}"
     docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/tags.csv
     # load setup scripts
     docker cp ./scripts/mongo-setup-indexes.js $CONTAINER_ID_MONGODB:/seeds/
     docker exec $CONTAINER_ID_MONGODB mongo /seeds/mongo-setup-indexes.js
     # remove the files after
     docker exec $CONTAINER_ID_MONGODB rm -rf /seeds
+
+    ## CouchDB
+    # create the databases
+    echo -e "${COLOR_YELLOW}CouchDB${COLOR_NO_COLOR}"
+    echo -e "${COLOR_YELLOW}Creating databases for couch...${COLOR_NO_COLOR}"
+    docker exec $CONTAINER_ID_COUCHDB curl -X PUT http://127.0.0.1:5984/movies
+    docker exec $CONTAINER_ID_COUCHDB curl -X PUT http://127.0.0.1:5984/ratings
+    docker exec $CONTAINER_ID_COUCHDB curl -X PUT http://127.0.0.1:5984/tags
+
+    echo -e "${COLOR_YELLOW}Seeding database for couch...${COLOR_NO_COLOR}"
+    docker exec $CONTAINER_ID_EXPRESS node ./scripts/couchdb-import.js
 
 else
     echo "$0 start/stop/init/chown/database"
