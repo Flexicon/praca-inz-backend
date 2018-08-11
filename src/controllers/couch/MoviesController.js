@@ -1,64 +1,64 @@
-const MongoModels = require('../../models/mongodb-models');
 const Utils = require('../../shared/util');
 const couch = require('../../dbs/couchdb');
 
-function getSort(sort) {
-  switch (sort) {
-    case 'title':
-      return 'title';
-    case 'title_desc':
-      return '-title';
-    case 'id_desc':
-      return '-_id';
-    case 'id':
-    default:
-      return '_id';
-  }
-}
-
 const MoviesController = {
   // Retrieve a paginated list of Movie documents
-  list: function(req, res, next) {
+  list: async function(req, res, next) {
     const phrase = req.query.phrase || '';
+    const tillPhrase = Utils.incrementLastChar(phrase);
 
-    // throw new Error('error');
+    // Count View query
     const dbName = 'movies';
-    const mangoQuery = {
-      selector: {
-        title: { $gt: 'Toy Story'},
-      },
-    };
-    const parameters = {};
+    const startKey = [phrase];
+    const endKey = [tillPhrase];
+    const countViewUrl = phrase
+      ? '_design/moviesviews/_view/count_by_title'
+      : '_design/moviesviews/_view/count_by_id';
 
-    couch.mango(dbName, mangoQuery, parameters).then(
-      ({ data, status }) => {
-        res.send({ status, data });
-      },
-      err => {
-        res.send({ err });
-      },
+    const queryOptions = phrase
+      ? {
+          startKey,
+          endKey
+        }
+      : {};
+
+    const count = await couch
+      .get(dbName, countViewUrl, queryOptions)
+      .then(({ data }) => data.rows[0].value)
+      .catch(err => next(err));
+
+    // List View query
+    const listViewUrl = phrase
+      ? '_design/moviesviews/_view/list_by_title'
+      : '_design/moviesviews/_view/list_by_id';
+
+    // Pagination params
+    const { limit, page, totalPages, sort } = Utils.preparePaginationParams(
+      req.query,
+      count
     );
+    const skip = count > 0 ? (page - 1) * limit : 0;
 
-    // MongoModels.Movie.find(phrase ? { title: { $regex: new RegExp(phrase, 'i') } } : null)
-    //   .count()
-    //   .then(count => {
-    //     const { limit, page, totalPages, sort } = Utils.preparePaginationParams(
-    //       req.query,
-    //       count,
-    //       100,
-    //     );
+    queryOptions.limit = limit;
+    queryOptions.skip = skip;
+    queryOptions.include_docs = true;
+    queryOptions.descending = sort.includes('_desc');
 
-    //     MongoModels.Movie.find(phrase ? { title: { $regex: new RegExp(phrase, 'i') } } : {})
-    //       .skip(count > 0 ? (page - 1) * limit : 0)
-    //       .limit(limit)
-    //       .sort(getSort(sort))
-    //       .exec()
-    //       .then(movies =>
-    //         res.send({ total: count, limit, page, totalPages, sort, phrase, items: movies }),
-    //       )
-    //       .catch(err => next(err));
-    //   })
-    //   .catch(err => next(err));
+    const items = await couch
+      .get(dbName, listViewUrl, queryOptions)
+      .then(({ data }) => data.rows)
+      .then(rows => rows.map(row => row.doc))
+      .catch(err => next(err));
+
+    res.send({
+      total: count,
+      limit,
+      page,
+      totalPages,
+      sort,
+      phrase,
+      items
+    });
   },
   // Retrieve a single Movie document
   movie: function(req, res, next) {
@@ -83,7 +83,7 @@ const MoviesController = {
     //       .catch(err => next(err));
     //   })
     //   .catch(err => next(err));
-  },
+  }
 };
 
 module.exports = MoviesController;

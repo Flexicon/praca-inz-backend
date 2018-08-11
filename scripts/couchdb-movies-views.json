@@ -6,6 +6,13 @@
     "count_by_title": {
       "map": "function(doc){ emit(doc.title, 1); }",
       "reduce": "_count"
+    },
+    "list_by_id": {
+      "map": "function(doc){ emit(doc._id, null); }"
+    },
+    "count_by_id": {
+      "map": "function(doc){ emit(doc._id, 1); }",
+      "reduce": "_count"
     }
   }
 }
