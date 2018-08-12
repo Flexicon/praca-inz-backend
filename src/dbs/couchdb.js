@@ -1,7 +1,12 @@
-const NodeCouchDb = require('node-couchdb');
+const axios = require('axios');
 
-const couch = new NodeCouchDb({
-  host: 'couchdb',
-});
+const host = 'couchdb';
+const port = 5984;
 
-module.exports = couch;
+const config = {
+  baseURL: `http://${host}:${port}`
+};
+
+const couchHttp = axios.create(config);
+
+module.exports = couchHttp;

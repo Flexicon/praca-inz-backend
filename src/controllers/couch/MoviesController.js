@@ -9,21 +9,22 @@ const MoviesController = {
 
     // Count View query
     const dbName = 'movies';
-    const startKey = [phrase];
-    const endKey = [tillPhrase];
+    const startkey = `"${phrase}"`;
+    const endkey = `"${tillPhrase}"`;
     const countViewUrl = phrase
-      ? '_design/moviesviews/_view/count_by_title'
-      : '_design/moviesviews/_view/count_by_id';
+      ? '/_design/moviesviews/_view/count_by_title'
+      : '/_design/moviesviews/_view/count_by_id';
 
     const queryOptions = phrase
       ? {
-          startKey,
-          endKey
+          startkey,
+          endkey
         }
       : {};
 
+    // Retrieve total movies count for given phrase
     const count = await couch
-      .get(dbName, countViewUrl, queryOptions)
+      .get(`/${dbName}/${countViewUrl}`, { params: queryOptions })
       .then(({ data }) => data.rows[0].value)
       .catch(err => next(err));
 
@@ -45,7 +46,7 @@ const MoviesController = {
     queryOptions.descending = sort.includes('_desc');
 
     const items = await couch
-      .get(dbName, listViewUrl, queryOptions)
+      .get(`/${dbName}/${listViewUrl}`, { params: queryOptions })
       .then(({ data }) => data.rows)
       .then(rows => rows.map(row => row.doc))
       .catch(err => next(err));
@@ -61,28 +62,33 @@ const MoviesController = {
     });
   },
   // Retrieve a single Movie document
-  movie: function(req, res, next) {
-    res.send({ message: 'Movie detail - couchdb' });
+  movie: async function(req, res, next) {
+    try {
+      const movieId = req.params.id;
 
-    // MongoModels.Movie.findById(+req.params.id)
-    //   .then(movie => {
-    //     if (!movie) {
-    //       res.status(404).send({ message: 'No movie found by given id' });
-    //       return;
-    //     }
-    //     const ratingsPromise = MongoModels.Rating.aggregate([
-    //       { $match: { movieId: movie._id } },
-    //       { $group: { _id: null, rating: { $avg: '$rating' }, count: { $sum: 1 } } },
-    //     ]).exec();
-    //     const tagsPromise = MongoModels.Tag.find({ movieId: movie._id })
-    //       .limit(100)
-    //       .sort('-timestamp');
+      // Retrieve movie doc
+      const movie = await couch
+        .get(`/movies/${movieId}`)
+        .then(({ data }) => data)
+        .catch(err => next(err));
 
-    //     Promise.all([ratingsPromise, tagsPromise])
+      // Retrieve tags
+      const tagsViewUrl = '/tags/_design/lists/_view/list_by_movie';
+      const queryOptions = { startkey: `"${movieId}"`, endkey: `"${movieId}"` };
+
+      const tags = await couch
+        .get(tagsViewUrl, { params: queryOptions })
+        .then(({ data }) => data.rows)
+        .catch(err => next(err));
+
+      // Retrieve average rating
+
+      res.send({ movie, tags });
+    } catch (e) {
+      next(e);
+    }
+
     //       .then(([rating, tags]) => res.send({ movie, rating, tags }))
-    //       .catch(err => next(err));
-    //   })
-    //   .catch(err => next(err));
   }
 };
 
