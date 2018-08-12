@@ -1,0 +1,11 @@
+{
+  "views": {
+    "list_by_movie": {
+      "map": "function(doc){ emit(doc.movieId, null); }"
+    },
+    "count_by_movie": {
+      "map": "function(doc){ emit(doc.movieId, 1); }",
+      "reduce": "_count"
+    }
+  }
+}
