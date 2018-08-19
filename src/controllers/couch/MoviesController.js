@@ -72,23 +72,30 @@ const MoviesController = {
         .then(({ data }) => data)
         .catch(err => next(err));
 
+      // Retrieve average rating
+      const ratingsViewUrl = '/ratings/_design/lists/_view/avg_by_movie';
+      const queryOptions = { startkey: `"${movieId}"`, endkey: `"${movieId}"` };
+
+      const rating = await couch
+        .get(ratingsViewUrl, { params: queryOptions })
+        .then(({ data }) => data.rows[0].value)
+        .then(({ count, sum }) => ({ count, avg: sum / count }))
+        .catch(err => next(err));
+
       // Retrieve tags
       const tagsViewUrl = '/tags/_design/lists/_view/list_by_movie';
-      const queryOptions = { startkey: `"${movieId}"`, endkey: `"${movieId}"` };
+      queryOptions.include_docs = true;
 
       const tags = await couch
         .get(tagsViewUrl, { params: queryOptions })
         .then(({ data }) => data.rows)
+        .then(rows => rows.map(row => row.doc))
         .catch(err => next(err));
 
-      // Retrieve average rating
-
-      res.send({ movie, tags });
+      res.send({ movie, rating, tags });
     } catch (e) {
       next(e);
     }
-
-    //       .then(([rating, tags]) => res.send({ movie, rating, tags }))
   }
 };
 

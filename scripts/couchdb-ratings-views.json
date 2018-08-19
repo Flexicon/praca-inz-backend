@@ -1,18 +1,8 @@
 {
   "views": {
-    "list_by_timestamp": {
-      "map": "function(doc){ emit(doc.timestamp, null); }"
-    },
-    "count_by_timestamp": {
-      "map": "function(doc){ emit(doc.timestamp, 1); }",
-      "reduce": "_count"
-    },
-    "list_by_movie": {
-      "map": "function(doc){ emit(doc.movieId, null); }"
-    },
-    "count_by_movie": {
-      "map": "function(doc){ emit(doc.movieId, 1); }",
-      "reduce": "_count"
+    "avg_by_movie": {
+      "map": "function(doc){ emit(doc.movieId, +doc.rating); }",
+      "reduce": "_stats"
     }
   }
 }

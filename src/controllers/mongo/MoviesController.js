@@ -20,22 +20,34 @@ const MoviesController = {
   list: function(req, res, next) {
     const phrase = req.query.phrase || '';
 
-    MongoModels.Movie.find(phrase ? { title: { $regex: new RegExp(phrase, 'i') } } : null)
+    MongoModels.Movie.find(
+      phrase ? { title: { $regex: new RegExp(phrase, 'i') } } : null
+    )
       .count()
       .then(count => {
         const { limit, page, totalPages, sort } = Utils.preparePaginationParams(
           req.query,
           count,
-          100,
+          100
         );
 
-        MongoModels.Movie.find(phrase ? { title: { $regex: new RegExp(phrase, 'i') } } : {})
+        MongoModels.Movie.find(
+          phrase ? { title: { $regex: new RegExp(phrase, 'i') } } : {}
+        )
           .skip(count > 0 ? (page - 1) * limit : 0)
           .limit(limit)
           .sort(getSort(sort))
           .exec()
           .then(movies =>
-            res.send({ total: count, limit, page, totalPages, sort, phrase, items: movies }),
+            res.send({
+              total: count,
+              limit,
+              page,
+              totalPages,
+              sort,
+              phrase,
+              items: movies
+            })
           )
           .catch(err => next(err));
       })
@@ -51,8 +63,17 @@ const MoviesController = {
         }
         const ratingsPromise = MongoModels.Rating.aggregate([
           { $match: { movieId: movie._id } },
-          { $group: { _id: null, rating: { $avg: '$rating' }, count: { $sum: 1 } } },
-        ]).exec();
+          {
+            $group: {
+              _id: null,
+              rating: { $avg: '$rating' },
+              count: { $sum: 1 }
+            }
+          }
+        ])
+          .exec()
+          .then(data => data[0])
+          .then(({ rating, count }) => ({ count, avg: rating }));
         const tagsPromise = MongoModels.Tag.find({ movieId: movie._id })
           .limit(100)
           .sort('-timestamp');
@@ -62,7 +83,7 @@ const MoviesController = {
           .catch(err => next(err));
       })
       .catch(err => next(err));
-  },
+  }
 };
 
 module.exports = MoviesController;
