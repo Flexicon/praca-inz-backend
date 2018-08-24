@@ -76,6 +76,7 @@ elif [[ $1 == 'clean' ]]; then
     ./manage.sh stop
     docker-compose down --remove-orphans
     docker volume rm backend_mongo_data
+    docker volume rm backend_couch_data
 
 elif [[ $1 == 'database' && $2 == 'seed-data' ]]; then
     CONTAINER_ID_EXPRESS=`docker-compose ps -q express`
@@ -84,23 +85,23 @@ elif [[ $1 == 'database' && $2 == 'seed-data' ]]; then
 
     ## MongoDB
     # copy seed files to the container
-    echo -e "${COLOR_YELLOW}MongoDB${COLOR_NO_COLOR}"
-    docker exec $CONTAINER_ID_MONGODB mkdir /seeds
-    docker cp ./seeds/movies.csv $CONTAINER_ID_MONGODB:/seeds/
-    docker cp ./seeds/ratings.csv $CONTAINER_ID_MONGODB:/seeds/
-    docker cp ./seeds/tags.csv $CONTAINER_ID_MONGODB:/seeds/
+   echo -e "${COLOR_YELLOW}MongoDB${COLOR_NO_COLOR}"
+   docker exec $CONTAINER_ID_MONGODB mkdir /seeds
+   docker cp ./seeds/movies.csv $CONTAINER_ID_MONGODB:/seeds/
+   docker cp ./seeds/ratings.csv $CONTAINER_ID_MONGODB:/seeds/
+   docker cp ./seeds/tags.csv $CONTAINER_ID_MONGODB:/seeds/
     # load data into database
-    echo -e "${COLOR_YELLOW}Creating movies database for mongo...${COLOR_NO_COLOR}"
-    docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/movies.csv
-    echo -e "${COLOR_YELLOW}Creating ratings database for mongo...${COLOR_NO_COLOR}"
-    docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/ratings.csv
-    echo -e "${COLOR_YELLOW}Creating tags database for mongo...${COLOR_NO_COLOR}"
-    docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/tags.csv
+   echo -e "${COLOR_YELLOW}Creating movies database for mongo...${COLOR_NO_COLOR}"
+   docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/movies.csv
+   echo -e "${COLOR_YELLOW}Creating ratings database for mongo...${COLOR_NO_COLOR}"
+   docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/ratings.csv
+   echo -e "${COLOR_YELLOW}Creating tags database for mongo...${COLOR_NO_COLOR}"
+   docker exec $CONTAINER_ID_MONGODB mongoimport --db praca_inz --type csv --headerline --file /seeds/tags.csv
     # load setup scripts
-    docker cp ./scripts/mongo-setup-indexes.js $CONTAINER_ID_MONGODB:/seeds/
-    docker exec $CONTAINER_ID_MONGODB mongo /seeds/mongo-setup-indexes.js
+   docker cp ./scripts/mongo-setup-indexes.js $CONTAINER_ID_MONGODB:/seeds/
+   docker exec $CONTAINER_ID_MONGODB mongo /seeds/mongo-setup-indexes.js
     # remove the files after
-    docker exec $CONTAINER_ID_MONGODB rm -rf /seeds
+   docker exec $CONTAINER_ID_MONGODB rm -rf /seeds
 
     ## CouchDB
     # create the databases
@@ -110,10 +111,20 @@ elif [[ $1 == 'database' && $2 == 'seed-data' ]]; then
     docker exec $CONTAINER_ID_COUCHDB curl -X PUT http://127.0.0.1:5984/ratings
     docker exec $CONTAINER_ID_COUCHDB curl -X PUT http://127.0.0.1:5984/tags
 
+    # setup Couchdb views
+    echo -e "${COLOR_YELLOW}Creating Couch view docs...${COLOR_NO_COLOR}"
+    docker exec $CONTAINER_ID_COUCHDB mkdir /scripts
+    docker cp ./scripts/couchdb-movies-views.json $CONTAINER_ID_COUCHDB:/scripts/
+    docker cp ./scripts/couchdb-tags-views.json $CONTAINER_ID_COUCHDB:/scripts/
+    docker cp ./scripts/couchdb-ratings-views.json $CONTAINER_ID_COUCHDB:/scripts/
+    docker exec -it $CONTAINER_ID_COUCHDB curl 'http://127.0.0.1:5984/movies/_design/moviesviews' --upload-file /scripts/couchdb-movies-views.json
+    docker exec -it $CONTAINER_ID_COUCHDB curl 'http://127.0.0.1:5984/tags/_design/lists' --upload-file /scripts/couchdb-tags-views.json
+    docker exec -it $CONTAINER_ID_COUCHDB curl 'http://127.0.0.1:5984/ratings/_design/lists' --upload-file /scripts/couchdb-ratings-views.json
+
     echo -e "${COLOR_YELLOW}Seeding database for couch...${COLOR_NO_COLOR}"
-    docker exec $CONTAINER_ID_EXPRESS node ./scripts/couchdb-import.js
+    docker exec -it $CONTAINER_ID_EXPRESS node ./scripts/couchdb-import.js
 
 else
-    echo "$0 start/stop/init/chown/database"
+    echo "$0 start/stop/init/chown/clean/database"
 
 fi

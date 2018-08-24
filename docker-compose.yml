@@ -6,6 +6,8 @@ services:
       - mongo_data:/data/db
   couchdb:
     image: couchdb
+    volumes:
+      - couch_data:/opt/couchdb/data
     ports:
       - "5984:5984"
   express:
@@ -22,3 +24,4 @@ services:
 
 volumes:
   mongo_data:
+  couch_data:
