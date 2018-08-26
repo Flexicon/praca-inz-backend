@@ -45,6 +45,11 @@ const MoviesController = {
     queryOptions.include_docs = true;
     queryOptions.descending = sort.includes('_desc');
 
+    if (phrase && sort.includes('_desc')) {
+      queryOptions.startkey = endkey;
+      queryOptions.endkey = startkey;
+    }
+
     const items = await couch
       .get(`/${dbName}/${listViewUrl}`, { params: queryOptions })
       .then(({ data }) => data.rows)
