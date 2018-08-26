@@ -75,7 +75,6 @@ const MoviesController = {
           .then(data => data[0])
           .then(({ rating, count }) => ({ count, avg: rating }));
         const tagsPromise = MongoModels.Tag.find({ movieId: movie._id })
-          .limit(100)
           .sort('-timestamp');
 
         Promise.all([ratingsPromise, tagsPromise])
