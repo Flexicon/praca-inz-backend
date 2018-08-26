@@ -25,13 +25,8 @@ const MoviesController = {
     // Retrieve total movies count for given phrase
     const count = await couch
       .get(`/${dbName}/${countViewUrl}`, { params: queryOptions })
-      .then(({ data }) => data.rows[0].value)
+      .then(({ data }) => (data.rows[0] ? data.rows[0].value : 0))
       .catch(err => next(err));
-
-    // List View query
-    const listViewUrl = phrase
-      ? '_design/moviesviews/_view/list_by_title'
-      : '_design/moviesviews/_view/list_by_id';
 
     // Pagination params
     const { limit, page, totalPages, sort } = Utils.preparePaginationParams(
@@ -39,6 +34,11 @@ const MoviesController = {
       count
     );
     const skip = count > 0 ? (page - 1) * limit : 0;
+
+    // List View query
+    const listViewUrl = phrase || sort.includes('title')
+      ? '_design/moviesviews/_view/list_by_title'
+      : '_design/moviesviews/_view/list_by_id';
 
     queryOptions.limit = limit;
     queryOptions.skip = skip;
